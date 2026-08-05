@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Toán cùng em - Nền tảng học tập Toán Lớp 2 tích hợp AI</title>
+  <meta name="description" content="Nền tảng học tập số dành cho học sinh lớp 2, tích hợp Trợ lý AI Panda Socratic, Đấu trường trò chơi toán học, Bài thi hàng tuần có Anti-Cheat và cá nhân hóa lộ trình học.">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ==========================================================================
+       APP HEADER & TOP NAVIGATION
+       ========================================================================== -->
+  <header class="app-header">
+    <div class="brand-container" onclick="App.switchStudentTab('dashboard')">
+      <div class="brand-logo">🐼</div>
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="brand-name">Toán Cùng Em</span>
+          <span class="brand-tag">Lớp 2 AI</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="user-bar">
+      <!-- Student Stats -->
+      <div class="stat-pill stars" title="Tổng số Sao thưởng">
+        ⭐ <span id="user-stars-count">1250</span>
+      </div>
+      <div class="stat-pill xp" title="Điểm kinh nghiệm XP">
+        ⚡ <span id="user-xp-count">450 XP</span>
+      </div>
+
+      <!-- Role Switcher -->
+      <div class="role-switcher">
+        <button class="role-btn active" data-role="student">👦 Học sinh: Bé Nam</button>
+        <button class="role-btn" data-role="teacher">👩‍🏫 Giáo viên: Cô Mai</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       MAIN CONTENT CONTAINER
+       ========================================================================== -->
+  <main class="main-wrapper">
+
+    <!-- STUDENT PORTAL VIEW -->
+    <div id="student-view">
+      <!-- Mascot Hero Banner -->
+      <div class="hero-banner">
+        <div class="hero-content">
+          <h1 class="hero-title">Học Toán Vui - Bứt Phá Điểm Số! 🌟</h1>
+          <p class="hero-subtitle">Chào mừng Bé Nam đến với thế giới Toán học Lớp 2 cùng Trợ lý AI Panda!</p>
+          <button class="btn-primary" style="background: linear-gradient(135deg, #FF9F1C, #FF8800); border: 2px solid white;" onclick="StudentPortal.startWeeklyTest()">
+            📝 Làm Bài Kiểm Tra Tuần 1
+          </button>
+        </div>
+        <div class="hero-mascot">
+          <div class="speech-bubble">
+            "Chào Bé Nam! Cùng Panda chinh phục thử thách toán học hôm nay nhé! 🐾"
+          </div>
+          <div class="mascot-avatar">🐼</div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="nav-tabs" id="student-tabs">
+        <button class="tab-btn active" data-tab="dashboard" onclick="App.switchStudentTab('dashboard')">
+          🏠 Trang Chủ & Nhiệm Vụ
+        </button>
+        <button class="tab-btn" data-tab="games" onclick="App.switchStudentTab('games')">
+          🎮 Đấu Trường Trò Chơi
+        </button>
+        <button class="tab-btn" data-tab="test" onclick="App.switchStudentTab('test')">
+          📝 Bài Thi Hằng Tuần
+        </button>
+        <button class="tab-btn" data-tab="history" onclick="App.switchStudentTab('history')">
+          📜 Lịch Sử & Nhận Xét
+        </button>
+      </div>
+
+      <!-- Dynamic Student View Container -->
+      <div id="student-tab-content">
+        <!-- Rendered by js/student.js -->
+      </div>
+    </div>
+
+    <!-- TEACHER PORTAL VIEW -->
+    <div id="teacher-view" style="display: none;">
+      <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h1 style="color: #0F172A; font-size: 1.8rem;">👩‍🏫 Bảng Điều Khiển Giáo Viên - Cô Mai</h1>
+          <p style="color: #64748B; font-weight: 600;">Quản lý Lớp 2A • Phân tích lỗ hổng kiến thức • Cá nhân hóa bằng AI</p>
+        </div>
+        <button class="btn-primary" onclick="TeacherPortal.showCreateTaskModal()">
+          ➕ Tạo & Giao Nhiệm Vụ Mới
+        </button>
+      </div>
+
+      <!-- Dynamic Teacher View Container -->
+      <div id="teacher-tab-content">
+        <!-- Rendered by js/teacher.js -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ==========================================================================
+       FLOATING AI TUTOR DRAWER (TRỢ LÝ AI PANDA)
+       ========================================================================== -->
+  <div class="ai-tutor-trigger" onclick="App.toggleAiTutor()" title="Mở Trợ lý AI Panda Toán Cùng Em">
+    🐼
+  </div>
+
+  <div class="ai-tutor-drawer" id="ai-tutor-drawer">
+    <div class="ai-tutor-header">
+      <div class="ai-tutor-title">
+        <span>🐼 Trợ Lý AI "Toán Cùng Em"</span>
+      </div>
+      <button style="background: transparent; border: none; color: white; font-size: 1.4rem; cursor: pointer;" onclick="App.toggleAiTutor()">✖</button>
+    </div>
+
+    <div class="ai-chat-body" id="ai-chat-body">
+      <div class="chat-msg panda">
+        Xin chào em! Chú là <strong>Panda Toán Học</strong> 🐼. Em có thắc mắc bài toán nào hay cần chú gợi ý từng bước tư duy không nè?
+      </div>
+    </div>
+
+    <div class="ai-chat-input-area">
+      <input type="text" class="chat-input" id="ai-chat-input" placeholder="Hỏi chú Panda bài toán này...">
+      <button class="btn-primary" onclick="App.sendAiChatMessage()" style="padding: 8px 16px;">Gửi 🚀</button>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       ANTI-CHEAT WARNING MODAL (CẢNH BÁO CHUYỂN TAB)
+       ========================================================================== -->
+  <div class="modal-overlay" id="anti-cheat-warning-modal">
+    <div class="warning-modal-box">
+      <div class="warning-icon">⚠️</div>
+      <h3 style="color: #DC2626; font-size: 1.5rem; margin-bottom: 10px;">CẢNH BÁO CHỐNG GIAN LẬN!</h3>
+      <p style="color: #475569; font-weight: 700; font-size: 1rem; margin-bottom: 20px;" id="warning-modal-desc">
+        Bé ơi! Hệ thống ghi nhận bé vừa rời khỏi trang thi. Vui lòng không chuyển tab!
+      </p>
+      <button class="btn-primary" style="background: #DC2626; width: 100%; justify-content: center;" onclick="StudentPortal.closeWarningModal()">
+        Em Đã Hiểu - Tiếp Tục Làm Bài
+      </button>
+    </div>
+  </div>
+
+  <!-- JavaScript Modules -->
+  <script src="js/store.js"></script>
+  <script src="js/ai-tutor.js"></script>
+  <script src="js/student.js"></script>
+  <script src="js/teacher.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
