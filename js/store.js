@@ -3,9 +3,9 @@
    ========================================================================== */
 
 const Store = {
-  // SUPABASE CONFIGURATION - THẦY/CÔ ĐIỀN THÔNG TIN TỪ DASHBOARD SUPABASE VÀO ĐÂY
-  SUPABASE_URL: 'https://YOUR_SUPABASE_PROJECT_ID.supabase.co',
-  SUPABASE_ANON_KEY: 'YOUR_SUPABASE_ANON_KEY',
+  // SUPABASE CONFIGURATION - THÔNG TIN TÀI KHOẢN SUPABASE THỰC TẾ
+  SUPABASE_URL: 'https://ncfcowbnxuuiwuoagqon.supabase.co',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jZmNvd2JueHV1aXd1b2FncW9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwOTY5NTUsImV4cCI6MjEwMTY3Mjk1NX0.qLRidCcqxUNMgKSsoPbS9cCwlrlkiDXKO1YhE43HxSc',
   supabase: null,
   isSupabaseConnected: false,
 
