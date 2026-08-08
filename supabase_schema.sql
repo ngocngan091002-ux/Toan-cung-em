@@ -85,6 +85,25 @@ ALTER TABLE public.daily_missions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.test_submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ai_recommendations ENABLE ROW LEVEL SECURITY;
 
+-- Xóa các policy cũ nếu đã tồn tại để tránh lỗi 42710
+DROP POLICY IF EXISTS "Allow public all users" ON public.users;
+DROP POLICY IF EXISTS "Allow public all question_bank" ON public.question_bank;
+DROP POLICY IF EXISTS "Allow public all daily_missions" ON public.daily_missions;
+DROP POLICY IF EXISTS "Allow public all test_submissions" ON public.test_submissions;
+DROP POLICY IF EXISTS "Allow public all ai_recommendations" ON public.ai_recommendations;
+
+DROP POLICY IF EXISTS "Allow public select students" ON public.students;
+DROP POLICY IF EXISTS "Allow public insert/update students" ON public.students;
+DROP POLICY IF EXISTS "Allow public select question_bank" ON public.question_bank;
+DROP POLICY IF EXISTS "Allow public insert/update question_bank" ON public.question_bank;
+DROP POLICY IF EXISTS "Allow public select daily_missions" ON public.daily_missions;
+DROP POLICY IF EXISTS "Allow public insert/update daily_missions" ON public.daily_missions;
+DROP POLICY IF EXISTS "Allow public select test_submissions" ON public.test_submissions;
+DROP POLICY IF EXISTS "Allow public insert test_submissions" ON public.test_submissions;
+DROP POLICY IF EXISTS "Allow public select ai_recommendations" ON public.ai_recommendations;
+DROP POLICY IF EXISTS "Allow public insert/update ai_recommendations" ON public.ai_recommendations;
+
+-- Tạo các policy mới
 CREATE POLICY "Allow public all users" ON public.users FOR ALL USING (true);
 CREATE POLICY "Allow public all question_bank" ON public.question_bank FOR ALL USING (true);
 CREATE POLICY "Allow public all daily_missions" ON public.daily_missions FOR ALL USING (true);
