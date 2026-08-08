@@ -4,10 +4,12 @@
 
 const App = {
   currentRole: 'student', // 'student' or 'teacher'
+  registerRole: 'student', // 'student' or 'teacher'
 
   init() {
     this.bindEvents();
-    this.switchRole(this.currentRole);
+    this.updateUserHeaderUI();
+    this.switchRole(Store.data.currentUser.role || 'student');
     StudentPortal.init();
     TeacherPortal.init();
   },
@@ -32,11 +34,132 @@ const App = {
     }
   },
 
+  // Update Top Navigation User Display Header
+  updateUserHeaderUI() {
+    const user = Store.data.currentUser;
+    const iconEl = document.getElementById('user-avatar-icon');
+    const nameEl = document.getElementById('user-display-name');
+    const displayContainer = document.getElementById('header-user-display');
+
+    if (nameEl) nameEl.textContent = user.name || (user.role === 'teacher' ? 'Cô Mai' : 'Bé Nam');
+    if (iconEl) iconEl.textContent = user.avatar || (user.role === 'teacher' ? '👩‍🏫' : '👦');
+
+    if (displayContainer) {
+      displayContainer.innerHTML = `
+        <span style="font-size: 1.2rem;">${user.avatar || (user.role === 'teacher' ? '👩‍🏫' : '👦')}</span>
+        <span><strong>${user.name}</strong> (${user.role === 'teacher' ? 'Giáo viên' : 'Học sinh'})</span>
+        <button class="btn-secondary" style="font-size: 0.75rem; padding: 3px 10px; border-radius: 12px; margin-left: 6px;" onclick="App.showAuthModal('login')">🔑 Đổi TK / Đăng ký</button>
+        <button class="btn-secondary" style="font-size: 0.75rem; padding: 3px 8px; border-radius: 12px; background: #FEE2E2; color: #DC2626; border-color: #FCA5A5;" onclick="Store.logoutUser()">Thoát</button>
+      `;
+    }
+  },
+
+  // Show Auth Modal (login or register mode)
+  showAuthModal(mode = 'login') {
+    const modal = document.getElementById('auth-modal');
+    if (modal) {
+      modal.classList.add('active');
+      this.switchAuthMode(mode);
+    }
+  },
+
+  // Close Auth Modal
+  closeAuthModal() {
+    const modal = document.getElementById('auth-modal');
+    if (modal) modal.classList.remove('active');
+  },
+
+  // Switch between Login and Register mode in Auth Modal
+  switchAuthMode(mode) {
+    const loginForm = document.getElementById('login-form');
+    const regForm = document.getElementById('register-form');
+    const tabLogin = document.getElementById('tab-login-btn');
+    const tabReg = document.getElementById('tab-register-btn');
+    const titleEl = document.getElementById('auth-modal-title');
+
+    if (mode === 'login') {
+      if (loginForm) loginForm.style.display = 'block';
+      if (regForm) regForm.style.display = 'none';
+      if (tabLogin) tabLogin.classList.add('active');
+      if (tabReg) tabReg.classList.remove('active');
+      if (titleEl) titleEl.textContent = '🔐 Đăng Nhập Hệ Thống';
+    } else {
+      if (loginForm) loginForm.style.display = 'none';
+      if (regForm) regForm.style.display = 'block';
+      if (tabLogin) tabLogin.classList.remove('active');
+      if (tabReg) tabReg.classList.add('active');
+      if (titleEl) titleEl.textContent = '✨ Đăng Ký Tài Khoản Mới';
+    }
+  },
+
+  // Select Register Role (Student or Teacher)
+  selectRegisterRole(role) {
+    this.registerRole = role;
+    const stdBtn = document.getElementById('role-std-btn');
+    const tchBtn = document.getElementById('role-tch-btn');
+
+    if (role === 'student') {
+      if (stdBtn) stdBtn.classList.add('selected');
+      if (tchBtn) tchBtn.classList.remove('selected');
+    } else {
+      if (stdBtn) stdBtn.classList.remove('selected');
+      if (tchBtn) tchBtn.classList.add('selected');
+    }
+  },
+
+  // Handle Login Form Submit
+  async handleLoginSubmit(e) {
+    e.preventDefault();
+    const uInput = document.getElementById('login-username');
+    const pInput = document.getElementById('login-password');
+
+    if (!uInput || !pInput) return;
+
+    try {
+      this.showToast('⏳ Đang kết nối xác thực dữ liệu Supabase...');
+      const user = await Store.loginUser(uInput.value, pInput.value);
+      this.closeAuthModal();
+      this.updateUserHeaderUI();
+      this.switchRole(user.role);
+      this.showToast(`🎉 Xin chào mừng ${user.name} đã đăng nhập thành công!`);
+    } catch (err) {
+      alert('⚠️ ' + err.message);
+    }
+  },
+
+  // Handle Register Form Submit
+  async handleRegisterSubmit(e) {
+    e.preventDefault();
+    const fnInput = document.getElementById('reg-fullname');
+    const uInput = document.getElementById('reg-username');
+    const pInput = document.getElementById('reg-password');
+
+    if (!fnInput || !uInput || !pInput) return;
+
+    try {
+      this.showToast('⏳ Đang tạo tài khoản mới trên Supabase Database...');
+      const user = await Store.registerUser({
+        username: uInput.value,
+        password: pInput.value,
+        fullName: fnInput.value,
+        role: this.registerRole,
+        avatar: this.registerRole === 'teacher' ? '👩‍🏫' : '👦'
+      });
+
+      this.closeAuthModal();
+      this.updateUserHeaderUI();
+      this.switchRole(user.role);
+      this.showToast(`🎉 Chúc mừng ${user.name} đã đăng ký tài khoản thành công!`);
+    } catch (err) {
+      alert('⚠️ ' + err.message);
+    }
+  },
+
   // Switch between Student and Teacher roles
   switchRole(role) {
     this.currentRole = role;
     Store.data.currentUser.role = role;
-    Store.save();
+    Store.saveLocal();
 
     document.querySelectorAll('.role-btn').forEach(btn => {
       btn.classList.toggle('active', btn.getAttribute('data-role') === role);
@@ -206,7 +329,6 @@ const App = {
     if (drawer) {
       drawer.classList.toggle('open');
       if (drawer.classList.contains('open')) {
-        // Increment mission progress if asking AI
         Store.completeMission('m3');
         StudentPortal.renderMissions();
       }
@@ -222,21 +344,18 @@ const App = {
     const val = input.value.trim();
     if (!val) return;
 
-    // Append User message
     body.innerHTML += `
       <div class="chat-msg user">${val}</div>
     `;
     input.value = '';
     body.scrollTop = body.scrollHeight;
 
-    // Show typing status
     const typingId = 'typing_' + Date.now();
     body.innerHTML += `
       <div class="chat-msg panda" id="${typingId}">🐼 Panda đang suy nghĩ gợi ý...</div>
     `;
     body.scrollTop = body.scrollHeight;
 
-    // Get current context question if taking test
     let currentQuestionObj = null;
     if (StudentPortal.testActive && StudentPortal.testQuestions) {
       currentQuestionObj = StudentPortal.testQuestions[StudentPortal.currentQuestionIdx];

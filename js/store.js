@@ -11,12 +11,14 @@ const Store = {
 
   // Local storage fallback key name
   STORAGE_KEY: 'TOAN_CUNG_EM_DB_V1',
+  AUTH_KEY: 'TOAN_CUNG_EM_ACTIVE_USER',
 
   // Current state data
   data: {
     currentUser: {
       role: 'student',
       id: 'std_01',
+      username: 'nam',
       name: 'Bé Nam',
       grade: 'Lớp 2A',
       avatar: '👦',
@@ -168,9 +170,156 @@ const Store = {
       } catch (err) {
         console.warn('⚠️ Supabase connection failed, using Local Storage fallback:', err);
       }
-    } else {
-      console.log('💡 Running with Local Storage Mode. (Điền URL & Key Supabase vào Store.SUPABASE_URL để bật Supabase Sync)');
     }
+  },
+
+  // LOGIN USER WITH USERNAME AND PASSWORD (SUPABASE + LOCAL FALLBACK)
+  async loginUser(username, password) {
+    const cleanUsername = username.toLowerCase().trim();
+
+    if (this.isSupabaseConnected && this.supabase) {
+      const { data, error } = await this.supabase
+        .from('users')
+        .select('*')
+        .eq('username', cleanUsername)
+        .eq('password', password)
+        .single();
+
+      if (error || !data) {
+        throw new Error('Tên đăng nhập hoặc mật khẩu không chính xác!');
+      }
+
+      this.data.currentUser = {
+        id: data.id,
+        username: data.username,
+        role: data.role,
+        name: data.full_name,
+        grade: data.grade || 'Lớp 2A',
+        avatar: data.avatar || (data.role === 'teacher' ? '👩‍🏫' : '👦'),
+        stars: data.stars || 0,
+        xp: data.xp || 0,
+        level: data.level || 1,
+        nextLevelXp: 700
+      };
+      
+      if (data.role === 'teacher') {
+        this.data.teacherInfo.id = data.id;
+        this.data.teacherInfo.name = data.full_name;
+      }
+
+      this.saveLocal();
+      localStorage.setItem(this.AUTH_KEY, JSON.stringify(this.data.currentUser));
+      return this.data.currentUser;
+    } else {
+      // Local Fallback simulation
+      if (cleanUsername === 'nam' && password === '123') {
+        this.data.currentUser.role = 'student';
+        this.data.currentUser.name = 'Bé Nam';
+      } else if (cleanUsername === 'mai' && password === '123') {
+        this.data.currentUser.role = 'teacher';
+        this.data.currentUser.name = 'Cô Mai';
+      } else {
+        throw new Error('Tên đăng nhập hoặc mật khẩu không đúng! (Dùng thử: nam/123 hoặc mai/123)');
+      }
+      this.saveLocal();
+      localStorage.setItem(this.AUTH_KEY, JSON.stringify(this.data.currentUser));
+      return this.data.currentUser;
+    }
+  },
+
+  // REGISTER NEW USER (SUPABASE + LOCAL FALLBACK)
+  async registerUser({ username, password, fullName, role, avatar }) {
+    const cleanUsername = username.toLowerCase().trim();
+    const newId = (role === 'teacher' ? 'tch_' : 'std_') + Date.now();
+    const defaultAvatar = avatar || (role === 'teacher' ? '👩‍🏫' : '👦');
+
+    if (this.isSupabaseConnected && this.supabase) {
+      // Check if username already exists
+      const { data: existing } = await this.supabase
+        .from('users')
+        .select('username')
+        .eq('username', cleanUsername);
+
+      if (existing && existing.length > 0) {
+        throw new Error('Tên đăng nhập này đã được sử dụng! Vui lòng chọn tên khác.');
+      }
+
+      const { data, error } = await this.supabase
+        .from('users')
+        .insert([{
+          id: newId,
+          username: cleanUsername,
+          password: password,
+          role: role,
+          full_name: fullName,
+          avatar: defaultAvatar,
+          grade: 'Lớp 2A',
+          stars: 100,
+          xp: 50,
+          level: 1,
+          avg_score: 10.0,
+          tests_done: 0,
+          status: 'Mới đăng ký'
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error('Đăng ký không thành công: ' + error.message);
+      }
+
+      this.data.currentUser = {
+        id: data.id,
+        username: data.username,
+        role: data.role,
+        name: data.full_name,
+        grade: data.grade,
+        avatar: data.avatar,
+        stars: data.stars,
+        xp: data.xp,
+        level: data.level,
+        nextLevelXp: 700
+      };
+
+      if (role === 'student') {
+        this.data.classStudents.push({
+          id: data.id,
+          name: data.full_name,
+          avgScore: 10.0,
+          testsDone: 0,
+          weakTopic: 'Chưa có',
+          status: 'Mới đăng ký',
+          stars: 100
+        });
+      }
+
+      this.saveLocal();
+      localStorage.setItem(this.AUTH_KEY, JSON.stringify(this.data.currentUser));
+      return this.data.currentUser;
+    } else {
+      // Fallback local registration
+      this.data.currentUser = {
+        id: newId,
+        username: cleanUsername,
+        role: role,
+        name: fullName,
+        grade: 'Lớp 2A',
+        avatar: defaultAvatar,
+        stars: 100,
+        xp: 50,
+        level: 1,
+        nextLevelXp: 700
+      };
+      this.saveLocal();
+      localStorage.setItem(this.AUTH_KEY, JSON.stringify(this.data.currentUser));
+      return this.data.currentUser;
+    }
+  },
+
+  // LOGOUT USER
+  logoutUser() {
+    localStorage.removeItem(this.AUTH_KEY);
+    location.reload();
   },
 
   // Sync data from Supabase DB to Store memory
@@ -179,16 +328,16 @@ const Store = {
 
     try {
       // 1. Fetch Students
-      const { data: stdData } = await this.supabase.from('students').select('*');
+      const { data: stdData } = await this.supabase.from('users').select('*').eq('role', 'student');
       if (stdData && stdData.length) {
         this.data.classStudents = stdData.map(s => ({
           id: s.id,
-          name: s.name,
-          avgScore: Number(s.avg_score),
-          testsDone: s.tests_done,
-          weakTopic: s.weak_topic,
-          status: s.status,
-          stars: s.stars
+          name: s.full_name,
+          avgScore: Number(s.avg_score || 8.75),
+          testsDone: s.tests_done || 0,
+          weakTopic: s.weak_topic || 'Chưa có',
+          status: s.status || 'Đang học',
+          stars: s.stars || 0
         }));
 
         const currentStd = stdData.find(s => s.id === this.data.currentUser.id);
@@ -252,8 +401,15 @@ const Store = {
       } catch (e) {
         console.error('Failed to parse localStorage store:', e);
       }
-    } else {
-      this.saveLocal();
+    }
+
+    const savedAuth = localStorage.getItem(this.AUTH_KEY);
+    if (savedAuth) {
+      try {
+        this.data.currentUser = JSON.parse(savedAuth);
+      } catch (e) {
+        console.error('Failed to parse auth session:', e);
+      }
     }
   },
 
@@ -318,7 +474,7 @@ const Store = {
         }]);
 
         // Update student stars & XP in Supabase
-        await this.supabase.from('students').update({
+        await this.supabase.from('users').update({
           stars: this.data.currentUser.stars,
           xp: this.data.currentUser.xp
         }).eq('id', submission.studentId);

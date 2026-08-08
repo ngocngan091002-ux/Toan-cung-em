@@ -1,12 +1,15 @@
 -- ==========================================================================
 -- TOÁN CÙNG EM - SUPABASE DATABASE INITIALIZATION SCRIPT (POSTGRESQL)
--- Copy và dán toàn bộ script này vào SQL Editor trên Supabase Dashboard và bấm RUN
+-- Script tích hợp Bảng Users (Username & Mật khẩu), RLS Policies & Seed Data
 -- ==========================================================================
 
--- 1. BẢNG HỌC SINH (students)
-CREATE TABLE IF NOT EXISTS public.students (
+-- 1. BẢNG TÀI KHOẢN ĐĂNG NHẬP & THÔNG TIN NGƯỜI DÙNG (users)
+CREATE TABLE IF NOT EXISTS public.users (
     id VARCHAR(50) PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(100) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'student', -- 'student' hoặc 'teacher'
+    full_name VARCHAR(100) NOT NULL,
     grade VARCHAR(20) DEFAULT 'Lớp 2A',
     avatar VARCHAR(10) DEFAULT '👦',
     stars INT DEFAULT 1250,
@@ -47,7 +50,7 @@ CREATE TABLE IF NOT EXISTS public.daily_missions (
 -- 4. BẢNG LƯU TRỮ BÀI THI & CHỐNG GIAN LẬN (test_submissions)
 CREATE TABLE IF NOT EXISTS public.test_submissions (
     id VARCHAR(50) PRIMARY KEY,
-    student_id VARCHAR(50) REFERENCES public.students(id) ON DELETE CASCADE,
+    student_id VARCHAR(50) REFERENCES public.users(id) ON DELETE CASCADE,
     student_name VARCHAR(100) NOT NULL,
     test_title VARCHAR(100) NOT NULL,
     score NUMERIC(4,2) NOT NULL,
@@ -64,7 +67,7 @@ CREATE TABLE IF NOT EXISTS public.test_submissions (
 -- 5. BẢNG GỢI Ý CÁ NHÂN HÓA TỪ AI (ai_recommendations)
 CREATE TABLE IF NOT EXISTS public.ai_recommendations (
     id VARCHAR(50) PRIMARY KEY,
-    student_id VARCHAR(50) REFERENCES public.students(id) ON DELETE CASCADE,
+    student_id VARCHAR(50) REFERENCES public.users(id) ON DELETE CASCADE,
     student_name VARCHAR(100) NOT NULL,
     suggested_topic VARCHAR(100) NOT NULL,
     reason TEXT NOT NULL,
@@ -74,41 +77,33 @@ CREATE TABLE IF NOT EXISTS public.ai_recommendations (
 );
 
 -- ==========================================================================
--- ROW LEVEL SECURITY (RLS) POLICIES - CHO PHÉP ĐỌC / GHI CÔNG KHAI QUA ANON KEY
+-- ROW LEVEL SECURITY (RLS) POLICIES - ĐỌC & GHI CÔNG KHAI QUA SUPABASE ANON KEY
 -- ==========================================================================
-ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.question_bank ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.daily_missions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.test_submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ai_recommendations ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow public select students" ON public.students FOR SELECT USING (true);
-CREATE POLICY "Allow public insert/update students" ON public.students FOR ALL USING (true);
-
-CREATE POLICY "Allow public select question_bank" ON public.question_bank FOR SELECT USING (true);
-CREATE POLICY "Allow public insert/update question_bank" ON public.question_bank FOR ALL USING (true);
-
-CREATE POLICY "Allow public select daily_missions" ON public.daily_missions FOR SELECT USING (true);
-CREATE POLICY "Allow public insert/update daily_missions" ON public.daily_missions FOR ALL USING (true);
-
-CREATE POLICY "Allow public select test_submissions" ON public.test_submissions FOR SELECT USING (true);
-CREATE POLICY "Allow public insert test_submissions" ON public.test_submissions FOR ALL USING (true);
-
-CREATE POLICY "Allow public select ai_recommendations" ON public.ai_recommendations FOR SELECT USING (true);
-CREATE POLICY "Allow public insert/update ai_recommendations" ON public.ai_recommendations FOR ALL USING (true);
+CREATE POLICY "Allow public all users" ON public.users FOR ALL USING (true);
+CREATE POLICY "Allow public all question_bank" ON public.question_bank FOR ALL USING (true);
+CREATE POLICY "Allow public all daily_missions" ON public.daily_missions FOR ALL USING (true);
+CREATE POLICY "Allow public all test_submissions" ON public.test_submissions FOR ALL USING (true);
+CREATE POLICY "Allow public all ai_recommendations" ON public.ai_recommendations FOR ALL USING (true);
 
 -- ==========================================================================
--- INSERT SEED DATA (DỮ LIỆU MẪU BAN ĐẦU CHO SUPABASE)
+-- INSERT SEED DATA (DỮ LIỆU TÀI KHOẢN MẪU BAN ĐẦU)
 -- ==========================================================================
 
--- Chèn Học sinh Lớp 2A
-INSERT INTO public.students (id, name, grade, avatar, stars, xp, level, avg_score, tests_done, weak_topic, status)
+-- Chèn Danh sách Tài khoản Học sinh & Giáo viên Mẫu
+INSERT INTO public.users (id, username, password, role, full_name, grade, avatar, stars, xp, level, avg_score, tests_done, weak_topic, status)
 VALUES 
-('std_01', 'Bé Nam', 'Lớp 2A', '👦', 1250, 450, 7, 8.75, 3, 'Phép trừ có nhớ', 'Cần luyện thêm'),
-('std_02', 'Bé An', 'Lớp 2A', '👧', 1680, 720, 9, 9.50, 3, 'Không có', 'Xuất sắc'),
-('std_03', 'Bé Bình', 'Lớp 2A', '👦', 820, 310, 5, 6.25, 2, 'Toán có lời văn', 'Cần hỗ trợ'),
-('std_04', 'Bé Hoa', 'Lớp 2A', '👧', 1040, 480, 6, 7.50, 3, 'Tìm X', 'Khá'),
-('std_05', 'Bé Linh', 'Lớp 2A', '👧', 1450, 600, 8, 9.00, 3, 'Đo lường', 'Giỏi')
+('std_01', 'nam', '123', 'student', 'Bé Nam', 'Lớp 2A', '👦', 1250, 450, 7, 8.75, 3, 'Phép trừ có nhớ', 'Cần luyện thêm'),
+('std_02', 'an', '123', 'student', 'Bé An', 'Lớp 2A', '👧', 1680, 720, 9, 9.50, 3, 'Không có', 'Xuất sắc'),
+('std_03', 'binh', '123', 'student', 'Bé Bình', 'Lớp 2A', '👦', 820, 310, 5, 6.25, 2, 'Toán có lời văn', 'Cần hỗ trợ'),
+('std_04', 'hoa', '123', 'student', 'Bé Hoa', 'Lớp 2A', '👧', 1040, 480, 6, 7.50, 3, 'Tìm X', 'Khá'),
+('std_05', 'linh', '123', 'student', 'Bé Linh', 'Lớp 2A', '👧', 1450, 600, 8, 9.00, 3, 'Đo lường', 'Giỏi'),
+('tch_01', 'mai', '123', 'teacher', 'Cô Mai', 'Lớp 2A', '👩‍🏫', 0, 0, 1, 10.0, 0, 'Không', 'Hoạt động')
 ON CONFLICT (id) DO NOTHING;
 
 -- Chèn Ngân hàng câu hỏi Lớp 2 chuẩn GDPT
