@@ -183,10 +183,10 @@ const Store = {
         .select('*')
         .eq('username', cleanUsername)
         .eq('password', password)
-        .single();
+        .maybeSingle();
 
       if (error || !data) {
-        throw new Error('Tên đăng nhập hoặc mật khẩu không chính xác!');
+        throw new Error('Tài khoản chưa được đăng ký hoặc sai mật khẩu! Vui lòng bấm tab "Đăng Ký Mới" bên cạnh để tạo tài khoản.');
       }
 
       this.data.currentUser = {
@@ -212,18 +212,35 @@ const Store = {
       return this.data.currentUser;
     } else {
       // Local Fallback simulation
-      if (cleanUsername === 'nam' && password === '123') {
-        this.data.currentUser.role = 'student';
-        this.data.currentUser.name = 'Bé Nam';
-      } else if (cleanUsername === 'mai' && password === '123') {
-        this.data.currentUser.role = 'teacher';
-        this.data.currentUser.name = 'Cô Mai';
+      const mockUsers = {
+        'nam': { id: 'std_01', username: 'nam', password: '123', role: 'student', name: 'Bé Nam', stars: 1250, xp: 450, avatar: '👦' },
+        'an': { id: 'std_02', username: 'an', password: '123', role: 'student', name: 'Bé An', stars: 1680, xp: 720, avatar: '👧' },
+        'binh': { id: 'std_03', username: 'binh', password: '123', role: 'student', name: 'Bé Bình', stars: 820, xp: 310, avatar: '👦' },
+        'hoa': { id: 'std_04', username: 'hoa', password: '123', role: 'student', name: 'Bé Hoa', stars: 1040, xp: 480, avatar: '👧' },
+        'linh': { id: 'std_05', username: 'linh', password: '123', role: 'student', name: 'Bé Linh', stars: 1450, xp: 600, avatar: '👧' },
+        'mai': { id: 'tch_01', username: 'mai', password: '123', role: 'teacher', name: 'Cô Mai', stars: 0, xp: 0, avatar: '👩‍🏫' }
+      };
+
+      const matched = mockUsers[cleanUsername];
+      if (matched && matched.password === password) {
+        this.data.currentUser = {
+          id: matched.id,
+          username: matched.username,
+          role: matched.role,
+          name: matched.name,
+          grade: 'Lớp 2A',
+          avatar: matched.avatar,
+          stars: matched.stars,
+          xp: matched.xp,
+          level: 7,
+          nextLevelXp: 700
+        };
+        this.saveLocal();
+        localStorage.setItem(this.AUTH_KEY, JSON.stringify(this.data.currentUser));
+        return this.data.currentUser;
       } else {
-        throw new Error('Tên đăng nhập hoặc mật khẩu không đúng! (Dùng thử: nam/123 hoặc mai/123)');
+        throw new Error('Tài khoản chưa được đăng ký hoặc sai mật khẩu! Vui lòng chọn tab "Đăng Ký Mới" bên cạnh.');
       }
-      this.saveLocal();
-      localStorage.setItem(this.AUTH_KEY, JSON.stringify(this.data.currentUser));
-      return this.data.currentUser;
     }
   },
 

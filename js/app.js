@@ -37,12 +37,25 @@ const App = {
   // Update Top Navigation User Display Header
   updateUserHeaderUI() {
     const user = Store.data.currentUser;
-    const iconEl = document.getElementById('user-avatar-icon');
-    const nameEl = document.getElementById('user-display-name');
     const displayContainer = document.getElementById('header-user-display');
 
-    if (nameEl) nameEl.textContent = user.name || (user.role === 'teacher' ? 'Cô Mai' : 'Bé Nam');
-    if (iconEl) iconEl.textContent = user.avatar || (user.role === 'teacher' ? '👩‍🏫' : '👦');
+    // Update Stars & XP in Top Bar
+    const starsEl = document.getElementById('user-stars-count');
+    const xpEl = document.getElementById('user-xp-count');
+    if (starsEl) starsEl.textContent = user.stars || 0;
+    if (xpEl) xpEl.textContent = (user.xp || 0) + ' XP';
+
+    // Update Student Hero Banner Welcome Text dynamically
+    const heroWelcomeEl = document.getElementById('hero-welcome-text');
+    const mascotSpeechEl = document.getElementById('mascot-speech-text');
+
+    if (user.role === 'student') {
+      if (heroWelcomeEl) heroWelcomeEl.textContent = `Chào mừng ${user.name} đến với thế giới Toán học Lớp 2 cùng Trợ lý AI Panda!`;
+      if (mascotSpeechEl) mascotSpeechEl.textContent = `"Chào ${user.name}! Cùng Panda chinh phục thử thách toán học hôm nay nhé! 🐾"`;
+    } else {
+      if (heroWelcomeEl) heroWelcomeEl.textContent = `Chào mừng ${user.name} đến với Bảng điều khiển Quản lý Lớp 2A!`;
+      if (mascotSpeechEl) mascotSpeechEl.textContent = `"Chào ${user.name}! Chúc cô một ngày giảng dạy vui vẻ và hiệu quả! 🐾"`;
+    }
 
     if (displayContainer) {
       displayContainer.innerHTML = `
@@ -155,20 +168,26 @@ const App = {
     }
   },
 
-  // Switch between Student and Teacher roles
-  switchRole(role) {
-    this.currentRole = role;
-    Store.data.currentUser.role = role;
-    Store.saveLocal();
+  // Switch between Student and Teacher roles with strict Authorization check
+  switchRole(targetRole) {
+    const user = Store.data.currentUser;
+
+    // ACCOUNT ROLE AUTHORIZATION CHECK:
+    if (user.role === 'student' && targetRole === 'teacher') {
+      alert(`⚠️ Bạn đang đăng nhập tài khoản Học sinh (${user.name}). Khu vực này dành riêng cho Giáo viên!\n\nNếu là Giáo viên, vui lòng bấm "Đổi TK / Đăng ký" để đăng nhập bằng tài khoản Cô Mai hoặc tài khoản Giáo viên của bạn.`);
+      return;
+    }
+
+    this.currentRole = targetRole;
 
     document.querySelectorAll('.role-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.getAttribute('data-role') === role);
+      btn.classList.toggle('active', btn.getAttribute('data-role') === targetRole);
     });
 
     const studentView = document.getElementById('student-view');
     const teacherView = document.getElementById('teacher-view');
 
-    if (role === 'student') {
+    if (targetRole === 'student') {
       studentView.style.display = 'block';
       teacherView.style.display = 'none';
       this.switchStudentTab('dashboard');
