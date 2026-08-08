@@ -15,14 +15,6 @@ const App = {
   },
 
   bindEvents() {
-    // Role switch listeners
-    document.querySelectorAll('.role-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const role = e.target.getAttribute('data-role');
-        this.switchRole(role);
-      });
-    });
-
     // Chat input Enter listener
     const chatInput = document.getElementById('ai-chat-input');
     if (chatInput) {
@@ -168,32 +160,22 @@ const App = {
     }
   },
 
-  // Switch between Student and Teacher roles with strict Authorization check
-  switchRole(targetRole) {
+  // Switch view strictly locked to the logged-in user's registered role
+  switchRole(role) {
     const user = Store.data.currentUser;
-
-    // ACCOUNT ROLE AUTHORIZATION CHECK:
-    if (user.role === 'student' && targetRole === 'teacher') {
-      alert(`⚠️ Bạn đang đăng nhập tài khoản Học sinh (${user.name}). Khu vực này dành riêng cho Giáo viên!\n\nNếu là Giáo viên, vui lòng bấm "Đổi TK / Đăng ký" để đăng nhập bằng tài khoản Cô Mai hoặc tài khoản Giáo viên của bạn.`);
-      return;
-    }
-
-    this.currentRole = targetRole;
-
-    document.querySelectorAll('.role-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.getAttribute('data-role') === targetRole);
-    });
+    const activeRole = user.role || 'student';
+    this.currentRole = activeRole;
 
     const studentView = document.getElementById('student-view');
     const teacherView = document.getElementById('teacher-view');
 
-    if (targetRole === 'student') {
-      studentView.style.display = 'block';
-      teacherView.style.display = 'none';
+    if (activeRole === 'student') {
+      if (studentView) studentView.style.display = 'block';
+      if (teacherView) teacherView.style.display = 'none';
       this.switchStudentTab('dashboard');
     } else {
-      studentView.style.display = 'none';
-      teacherView.style.display = 'block';
+      if (studentView) studentView.style.display = 'none';
+      if (teacherView) teacherView.style.display = 'block';
       TeacherPortal.renderDashboard();
     }
   },
