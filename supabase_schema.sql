@@ -122,7 +122,8 @@ VALUES
 ('std_03', 'binh', '123', 'student', 'Bé Bình', 'Lớp 2A', '👦', 820, 310, 5, 6.25, 2, 'Toán có lời văn', 'Cần hỗ trợ'),
 ('std_04', 'hoa', '123', 'student', 'Bé Hoa', 'Lớp 2A', '👧', 1040, 480, 6, 7.50, 3, 'Tìm X', 'Khá'),
 ('std_05', 'linh', '123', 'student', 'Bé Linh', 'Lớp 2A', '👧', 1450, 600, 8, 9.00, 3, 'Đo lường', 'Giỏi'),
-('tch_01', 'mai', '123', 'teacher', 'Cô Mai', 'Lớp 2A', '👩‍🏫', 0, 0, 1, 10.0, 0, 'Không', 'Hoạt động')
+('tch_01', 'mai', '123', 'teacher', 'Cô Mai', 'Lớp 2A', '👩‍🏫', 0, 0, 1, 10.0, 0, 'Không', 'Hoạt động'),
+('adm_01', 'admin', '123', 'admin', 'Quản trị viên Hệ thống', 'Toàn trường', '👑', 9999, 9999, 99, 10.0, 0, 'Không', 'Quản trị viên')
 ON CONFLICT (id) DO NOTHING;
 
 -- Chèn Ngân hàng câu hỏi Lớp 2 chuẩn GDPT

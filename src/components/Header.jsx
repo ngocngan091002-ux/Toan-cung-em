@@ -25,10 +25,10 @@ export const Header = ({ currentUser, onOpenAuth, onLogout }) => {
         {/* User Profile Badge & Auth Actions */}
         <div className="user-profile-badge">
           <span style={{ fontSize: '1.2rem' }}>
-            {currentUser.avatar || (currentUser.role === 'teacher' ? '👩‍🏫' : '👦')}
+            {currentUser.avatar || (currentUser.role === 'admin' ? '👑' : currentUser.role === 'teacher' ? '👩‍🏫' : '👦')}
           </span>
           <span>
-            <strong>{currentUser.name}</strong> ({currentUser.role === 'teacher' ? 'Giáo viên' : 'Học sinh'})
+            <strong>{currentUser.name}</strong> ({currentUser.role === 'admin' ? 'Admin' : currentUser.role === 'teacher' ? 'Giáo viên' : 'Học sinh'})
           </span>
 
           <button
